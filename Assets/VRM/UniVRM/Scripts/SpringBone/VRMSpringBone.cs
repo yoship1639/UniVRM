@@ -49,11 +49,11 @@ namespace VRM
         public VRMSpringBoneColliderGroup[] ColliderGroups;
 
         /// <summary>
-        /// 
+        ///
         /// original from
-        /// 
+        ///
         /// http://rocketjump.skr.jp/unity3d/109/
-        /// 
+        ///
         /// </summary>
         public class VRMSpringBoneLogic
         {
@@ -108,7 +108,7 @@ namespace VRM
 
             public void Update(Transform center,
                 float stiffnessForce, float dragForce, Vector3 external,
-                List<SphereCollider> colliders)
+                List<Collider> colliders)
             {
                 var currentTail = center!=null
                     ? center.TransformPoint(m_currentTail)
@@ -148,24 +148,100 @@ namespace VRM
             protected virtual Quaternion ApplyRotation(Vector3 nextTail)
             {
                 var rotation = ParentRotation * m_localRotation;
-                return Quaternion.FromToRotation(rotation * m_boneAxis, 
+                return Quaternion.FromToRotation(rotation * m_boneAxis,
                     nextTail - m_transform.position) * rotation;
             }
 
-            protected virtual Vector3 Collision(List<SphereCollider> colliders, Vector3 nextTail)
+            protected virtual Vector3 Collision(List<Collider> colliders, Vector3 nextTail)
             {
                 foreach (var collider in colliders)
                 {
-                    var r = Radius + collider.Radius;
-                    if (Vector3.SqrMagnitude(nextTail - collider.Position) <= (r * r))
+                    switch (collider.Kind)
                     {
-                        // ヒット。Colliderの半径方向に押し出す
-                        var normal = (nextTail - collider.Position).normalized;
-                        var posFromCollider = collider.Position + normal * (Radius + collider.Radius);
-                        // 長さをboneLengthに強制
-                        nextTail = m_transform.position + (posFromCollider - m_transform.position).normalized * m_length;
+                        case ColliderKind.Sphere:
+                            nextTail = CollisionToSphere(collider, nextTail);
+                            break;
+                        case ColliderKind.Capsule:
+                            nextTail = CollisionToCapsule(collider, nextTail);
+                            break;
                     }
                 }
+
+                return nextTail;
+            }
+
+            protected Vector3 CollisionToSphere(Collider collider, Vector3 nextTail)
+            {
+                var r = Radius + collider.Radius;
+                if (Vector3.SqrMagnitude(nextTail - collider.Position0) <= (r * r))
+                {
+                    // ヒット。Colliderの半径方向に押し出す
+                    var normal = (nextTail - collider.Position0).normalized;
+                    var posFromCollider = collider.Position0 + normal * (Radius + collider.Radius);
+                    // 長さをboneLengthに強制
+                    nextTail = m_transform.position + (posFromCollider - m_transform.position).normalized * m_length;
+                }
+
+                return nextTail;
+            }
+
+            protected Vector3 CollisionToCapsule(Collider collider, Vector3 nextTail)
+            {
+                var colA = collider.Position0;
+                var colB = collider.Position1;
+
+                var ur = Radius + collider.Radius;
+
+                var vecAB = colB - colA;
+                var vecBA = colA - colB;
+                var vecAB_N = vecAB.normalized;
+
+                // P がA点より外
+                var vecAP = nextTail - colA;
+                if (Vector3.Dot(vecAB, vecAP) < 0)
+                {
+                    var r = vecAP.sqrMagnitude;
+                    if (r <= ur * ur)
+                    {
+                        var normal = (nextTail - colA).normalized;
+                        var posFromCollider = colA + normal * ur;
+                        nextTail = m_transform.position +
+                                   (posFromCollider - m_transform.position).normalized * m_length;
+                    }
+
+                    return nextTail;
+                }
+
+                // P が B点より外
+                var vecBP = nextTail - colB;
+                if (Vector3.Dot(vecBA, vecBP) < 0)
+                {
+                    var r = vecBP.sqrMagnitude;
+                    if (r <= ur * ur)
+                    {
+                        var normal = (nextTail - colB).normalized;
+                        var posFromCollider = colB + normal * ur;
+                        nextTail = m_transform.position +
+                                   (posFromCollider - m_transform.position).normalized * m_length;
+                    }
+
+                    return nextTail;
+                }
+
+                var d = Vector3.Cross(vecAB, vecAP);
+                var rr = d.sqrMagnitude / vecAB.sqrMagnitude;
+                if (rr <= ur * ur)
+                {
+                    var x = Vector3.Dot(vecAP, vecAB_N);
+                    var vecAX = vecAB_N * x;
+                    var posX = colA + vecAX;
+
+                    var normal = (nextTail - posX).normalized;
+                    var posFromCollider = posX + normal * ur;
+                    nextTail = m_transform.position +
+                               (posFromCollider - m_transform.position).normalized * m_length;
+                }
+
                 return nextTail;
             }
 
@@ -244,21 +320,22 @@ namespace VRM
             {
                 var delta = parent.position - parent.parent.position;
                 var childPosition = parent.position + delta.normalized * 0.07f;
-                m_verlet.Add(new VRMSpringBoneLogic(center, parent, parent.worldToLocalMatrix.MultiplyPoint(childPosition)));
-            }
-            else
-            {
-                var firstChild = GetChildren(parent).First();
-                var localPosition = firstChild.localPosition;
-                var scale = firstChild.lossyScale;
                 m_verlet.Add(new VRMSpringBoneLogic(center, parent,
+                    parent.worldToLocalMatrix.MultiplyPoint(childPosition)));
+
+                return;
+            }
+
+            var firstChild = GetChildren(parent).First();
+            var localPosition = firstChild.localPosition;
+            var scale = firstChild.lossyScale;
+            m_verlet.Add(new VRMSpringBoneLogic(center, parent,
                     new Vector3(
                         localPosition.x * scale.x,
                         localPosition.y * scale.y,
                         localPosition.z * scale.z
-                        )))
-                    ;
-            }
+                    )))
+                ;
 
             foreach (Transform child in parent)
             {
@@ -266,13 +343,21 @@ namespace VRM
             }
         }
 
-        public struct SphereCollider
+        public enum ColliderKind
         {
-            public Vector3 Position;
+            Sphere,
+            Capsule,
+        }
+
+        public struct Collider
+        {
+            public ColliderKind Kind;
+            public Vector3 Position0;
+            public Vector3 Position1;
             public float Radius;
         }
 
-        List<SphereCollider> m_colliderList = new List<SphereCollider>();
+        List<Collider> m_colliderList = new List<Collider>();
         void LateUpdate()
         {
             if (m_verlet == null || m_verlet.Count == 0)
@@ -294,9 +379,21 @@ namespace VRM
                     {
                         foreach (var collider in group.Colliders)
                         {
-                            m_colliderList.Add(new SphereCollider
+                            m_colliderList.Add(new Collider
                             {
-                                Position = group.transform.TransformPoint(collider.Offset),
+                                Kind = ColliderKind.Sphere,
+                                Position0 = group.transform.TransformPoint(collider.Offset),
+                                Radius = collider.Radius,
+                            });
+                        }
+
+                        foreach (var collider in group.CapsuleColliders)
+                        {
+                            m_colliderList.Add(new Collider
+                            {
+                                Kind = ColliderKind.Capsule,
+                                Position0 = group.transform.TransformPoint(collider.OffsetStart),
+                                Position1 = group.transform.TransformPoint(collider.OffsetEnd),
                                 Radius = collider.Radius,
                             });
                         }

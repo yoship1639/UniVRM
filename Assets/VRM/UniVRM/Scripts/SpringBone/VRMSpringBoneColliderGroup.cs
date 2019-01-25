@@ -26,6 +26,24 @@ namespace VRM
             }
         };
 
+        [Serializable]
+        public class CapsuleCollider
+        {
+            public Vector3 OffsetStart;
+            public Vector3 OffsetEnd;
+
+            [Range(0, 1.0f)]
+            public float Radius;
+        }
+
+        [SerializeField]
+        public CapsuleCollider[] CapsuleColliders = new CapsuleCollider[]{
+            new CapsuleCollider
+            {
+                Radius=0.1f
+            }
+        };
+
         [SerializeField]
         Color m_gizmoColor = Color.magenta;
 
@@ -41,6 +59,25 @@ namespace VRM
             foreach (var y in Colliders)
             {
                 Gizmos.DrawWireSphere(y.Offset, y.Radius);
+            }
+
+            foreach (var y in CapsuleColliders)
+            {
+                Gizmos.DrawWireSphere(y.OffsetStart, y.Radius);
+                Gizmos.DrawWireSphere(y.OffsetEnd, y.Radius);
+
+                var offsets = new Vector3[]
+                {
+                    new Vector3(1.0f, 0.0f, .0f),
+                    new Vector3(-1.0f, 0.0f, 0.0f),
+                    new Vector3(0.0f, 0.0f, -1.0f),
+                    new Vector3(0.0f, 1.0f, 0.0f),
+                    new Vector3(0.0f, 0.0f, 1.0f),
+                    new Vector3(0.0f, -1.0f, 0.0f)
+                };
+                for (int i = 0; i < offsets.Length; i++) {
+                    Gizmos.DrawLine(y.OffsetStart + offsets[i] * y.Radius, y.OffsetEnd + offsets[i] * y.Radius);
+                }
             }
         }
     }

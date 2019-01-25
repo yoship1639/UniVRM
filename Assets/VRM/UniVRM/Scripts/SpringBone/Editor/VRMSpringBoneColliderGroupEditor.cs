@@ -33,6 +33,23 @@ namespace VRM
                 }
             }
 
+            foreach (var x in m_target.CapsuleColliders)
+            {
+                var offset = Handles.PositionHandle(x.OffsetStart, Quaternion.identity);
+                if (offset != x.OffsetStart)
+                {
+                    changed = true;
+                    x.OffsetStart = offset;
+                }
+
+                offset = Handles.PositionHandle(x.OffsetEnd, Quaternion.identity);
+                if (offset != x.OffsetEnd)
+                {
+                    changed = true;
+                    x.OffsetEnd = offset;
+                }
+            }
+
             if (changed)
             {
                 EditorUtility.SetDirty(m_target);
