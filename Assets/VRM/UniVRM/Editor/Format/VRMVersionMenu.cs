@@ -10,7 +10,7 @@ namespace VRM
 {
     public static class VRMVersionMenu
     {
-        const string path = "Assets/VRM/UniVRM/Scripts/Format/VRMVersion.cs";
+        const string path = "Assets/VRM/GLTFFormat/Runtime/VRM/VRMVersion.cs";
         const string template = @"
 namespace VRM
 {{
