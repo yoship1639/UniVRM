@@ -10,7 +10,7 @@ namespace UniGLTF
     public static class UniGLTFVersionMenu
     {
         public const int MENU_PRIORITY = 99;
-        static string path = "Assets/UniGLTF/Core/Scripts/UniGLTFVersion.cs";
+        static string path = "Assets/VRM/UniGLTF/Scripts/UniGLTFVersion.cs";
 
         const string template = @"
 namespace UniGLTF
