@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 namespace UniGLTF.Zip
 {
 
-    enum CompressionMethod : ushort
+    public enum CompressionMethod : ushort
     {
         Stored = 0, // The file is stored (no compression)
         Shrink = 1, // The file is Shrunk
@@ -94,7 +94,7 @@ namespace UniGLTF.Zip
         }
     }
 
-    abstract class CommonHeader
+    public abstract class CommonHeader
     {
         public Encoding Encoding = Encoding.UTF8;
         public Byte[] Bytes;
@@ -193,7 +193,7 @@ namespace UniGLTF.Zip
         public abstract void ReadAfter(BinaryReader r);
     }
 
-    class CentralDirectoryFileHeader : CommonHeader
+    public class CentralDirectoryFileHeader : CommonHeader
     {
         public override int Signature
         {
@@ -292,7 +292,7 @@ namespace UniGLTF.Zip
         }
     }
 
-    class ZipArchiveStorage : IStorage
+    public class ZipArchiveStorage : IStorage
     {
         public override string ToString()
         {

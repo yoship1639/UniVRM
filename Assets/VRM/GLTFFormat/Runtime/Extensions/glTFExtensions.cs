@@ -8,7 +8,7 @@ using UnityEngine;
 namespace UniGLTF
 {
     [Serializable, StructLayout(LayoutKind.Sequential, Pack = 1)]
-    struct UShort4
+    public struct UShort4
     {
         public ushort x;
         public ushort y;

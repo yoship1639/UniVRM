@@ -2,7 +2,8 @@
     "name": "UniVRM.Editor",
     "references": [
         "VRM",
-        "UniJSON"
+        "UniJSON",
+        "GLTFFormat.Runtime"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [

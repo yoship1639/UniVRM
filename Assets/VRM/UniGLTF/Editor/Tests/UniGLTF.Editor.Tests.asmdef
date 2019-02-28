@@ -2,7 +2,8 @@
     "name": "UniGLTF.Editor.Tests",
     "references": [
         "VRM",
-        "UniJSON"
+        "UniJSON",
+        "GLTFFormat.Runtime"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

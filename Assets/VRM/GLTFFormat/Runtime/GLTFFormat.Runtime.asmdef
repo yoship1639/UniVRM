@@ -1,9 +1,7 @@
 {
-    "name": "VRM.Samples",
+    "name": "GLTFFormat.Runtime",
     "references": [
-        "VRM",
-        "UniHumanoid",
-        "GLTFFormat.Runtime"
+        "UniJSON"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

@@ -1,10 +1,11 @@
 {
-    "name": "UniVRM.DevOnly.Editor",
+    "name": "GLTFFormat.Tests",
     "references": [
-        "VRM",
         "GLTFFormat.Runtime"
     ],
-    "optionalUnityReferences": [],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
     "includePlatforms": [
         "Editor"
     ],
